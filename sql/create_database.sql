@@ -1,0 +1,5 @@
+IF DB_ID(N'LicenseIQ') IS NULL
+BEGIN
+    CREATE DATABASE [LicenseIQ];
+END;
+GO

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LicenseIQ</title>
+  
+  <!-- External libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- LOGIN MODAL -->
+  <div id="login">
+    <div class="lbox">
+      <div class="llogo-wrap">
+        <img src="/static/img/Tenarai_rgb_k.png" alt="Tenarai" class="brand-logo brand-logo-login"/>
+        <div class="llogo"><span></span>LicenseIQ</div>
+      </div>
+      <div style="font-size:13px;color:var(--gray2);margin-bottom:22px;">Sign in to your scoped view</div>
+      <div class="fg" style="margin-bottom:12px;">
+        <label style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;">Email</label>
+        <input type="email" id="lstaffid" placeholder="you@company.com" autocomplete="email"
+          style="margin-top:5px;" onkeydown="if(event.key==='Enter')document.getElementById('lpwd').focus()"/>
+      </div>
+      <div class="fg" style="margin-bottom:10px;">
+        <label style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;">Password</label>
+        <input type="password" id="lpwd" placeholder="Enter your password" autocomplete="current-password"
+          style="margin-top:5px;" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div id="lerr" style="font-size:12px;color:var(--red);min-height:18px;margin-bottom:8px;"></div>
+      <button class="lbtn" id="lbtn" onclick="doLogin()">Sign in ></button>
+      <div style="margin-top:16px;background:var(--tan);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--gray2);">
+        <div style="font-weight:600;color:var(--gray);margin-bottom:5px;">Sign in</div>
+        <div>Use your authorised Tenarai email and password. Access is limited to approved users only.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" style="display:none;">
+    <a id="logo" href="#" onclick="show('analytics'); return false;">
+      <div class="logo-row">
+        <div class="brand-logo-sidebar-shell">
+          <img src="/static/img/Tenarai_w.png" alt="Tenarai" class="brand-logo brand-logo-sidebar brand-logo-sidebar-full"/>
+        </div>
+        <button class="hamburger sidebar-hamburger iqtt" id="hamburger" data-tip="Collapse" onclick="event.preventDefault(); event.stopPropagation(); toggleSidebar()" aria-label="Toggle sidebar">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <div class="wmark"><em></em>LicenseIQ</div>
+      <div class="wsub">License Management System</div>
+    </a>
+    <nav id="nav"></nav>
+    <div id="aspire-wrap" style="display:none;"><div class="aspire-bar"><div class="adot"></div><div><div class="atxt">Connected</div><div class="asub"></div></div></div></div>
+    <div id="sfooter"><div class="urow"><div class="av" id="sav">LA</div><div><div class="uname" id="sname">Admin</div><div class="urole" id="srole">IT</div></div></div><div class="swbtn-row"><button class="swbtn swbtn-refresh" onclick="refreshCurrentPage()" title="Refresh current view"><svg viewBox="0 0 16 16" fill="none" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px;"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.8 0 3.4.87 4.4 2.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><polyline points="10,2 12.8,2.5 12.3,5.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="swbtn-label">Refresh</span></button><button class="swbtn" onclick="doLogout()">Sign out</button></div></div>
+  </aside>
+
+  <!-- MAIN APPLICATION -->
+  <div id="main" style="display:none;">
+    <div id="topbar"><div><div class="ptitle" id="ptitle"></div><div class="psub" id="psub"></div></div><div id="tba"></div></div>
+    <div id="content">
+      <!-- DASHBOARD --> <div id="sec-dashboard" class="sec on"><div class="fbar"><span class="fbar-label">Filter by</span><select id="df-account" onchange="renderDash()" style="width:auto;min-width:130px;font-size:12px;"><option value="">All accounts</option></select><select id="df-gdl" onchange="renderDash()" style="width:auto;min-width:120px;font-size:12px;"><option value="">All GDL</option></select><select id="df-proj" onchange="renderDash()" style="width:auto;min-width:130px;font-size:12px;"><option value="">All projects</option></select><button class="btn" onclick="clearDF()" style="font-size:11px;">Clear filters</button><div style="margin-left:auto;font-size:11px;color:var(--gray2);" id="df-scope"></div></div><div class="g4" id="dm"></div><div class="g4" id="cfo-strip" style="display:none;"></div><div class="g2"><div class="card"><div class="ctitle">Platform distribution</div><div id="dpb"></div></div><div class="card"><div class="ctitle">Cost by account</div><div id="dab"></div></div></div><div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div class="ctitle" style="margin-bottom:0;">Month-on-month spend trend</div><select id="trend-unit" onchange="renderTrend()" style="width:auto;font-size:11px;"><option value="total">Total spend</option></select></div><div id="trend-chart"></div></div><div class="card"><div class="ctitle">Recent Aspire alerts</div><table><thead><tr><th>Employee</th><th>Licenses</th><th>Alert</th><th>Priority</th><th>Since</th><th></th></tr></thead><tbody id="dat"></tbody></table></div></div>
+
+      <!-- ANALYTICS --> <div id="sec-analytics" class="sec"></div>
+
+      <!-- ALERTS --> <div id="sec-alerts" class="sec"><div style="background:#1a2a1a;border:1px solid #2a4a2a;border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;"><div class="adot"></div><span style="color:#6abf6a;font-weight:500;">HRMS connected</span><span style="color:#3a6a3a;">~ Exit ~ Corporate Pool ~ project change auto-pushed</span><span id="alert-sync-banner" style="margin-left:auto;color:#3a6a3a;font-size:11px;">Last sync: Today 08:14 AM ~ 6 events</span></div><div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;"><button class="btn bdk" id="af-all" onclick="falt('all')">All <span id="ca"></span></button><button class="btn" id="af-exit" onclick="falt('exit')">Exit <span id="ce"></span></button><button class="btn" id="af-bench" onclick="falt('bench')">Corporate Pool <span id="cb"></span></button><button class="btn" id="af-project" onclick="falt('project')">Project change <span id="cp"></span></button><div style="margin-left:auto;font-size:12px;color:var(--gray2);" id="afl"></div></div><div style="margin-bottom:12px;"><input type="text" id="alerts-search" placeholder="Search by employee name, project, or account..." oninput="filterAlerts()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;"/></div><div id="alc"></div></div>
+
+      <!-- LICENSE REGISTER --> <div id="sec-licenses" class="sec"><div class="fbar" id="lic-fbar"></div><div class="card" style="padding:0;overflow-x:auto;"><table><thead><tr><th onclick="setLicSort('id')" style="cursor:pointer;white-space:nowrap;">Employee ID <span id="lsort-id" style="font-size:10px;color:#bbb;">></span></th><th onclick="setLicSort('name')" style="cursor:pointer;white-space:nowrap;">Employee <span id="lsort-name" style="font-size:10px;color:#bbb;">></span></th><th>Unit</th><th>Licenses</th><th>Project ~ Account</th><th>Oracle ID</th><th onclick="setLicSort('cost')" style="cursor:pointer;white-space:nowrap;">Total cost/Mth <span id="lsort-cost" style="font-size:10px;color:#bbb;">></span></th><th onclick="setLicSort('status')" style="cursor:pointer;white-space:nowrap;">Employee status <span id="lsort-status" style="font-size:10px;color:#bbb;">></span></th><th>License status</th><th>History</th><th></th></tr></thead><tbody id="ltb"></tbody></table></div><div class="lic-pager-bar" id="lpager-bottom"></div><div class="card" id="hist-panel" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div class="ctitle" style="margin-bottom:0;">License allocation history - <span id="hist-emp"></span></div><button class="btn" onclick="document.getElementById('hist-panel').style.display='none'">Close</button></div><div id="hist-content"></div></div></div>
+
+      <!-- RAISE REQUEST -->
+    <div id="sec-request" class="sec">
+      <div id="rqs"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctitle">New license request</div>
+          <div class="fgrid">
+            <div class="fg"><label>Request type</label><select id="rqt"><option value="assign">Assign license</option><option value="revoke">Revoke license</option></select></div>
+            <div class="fg">
+              <label>Platform</label>
+              <div class="searchable-dropdown" id="plat-dropdown-request">
+                <input id="rqp" type="text" placeholder="Search platform..." autocomplete="off" oninput="filterPlatformsRequest()" onfocus="filterPlatformsRequest()"/>
+                <div class="searchable-dropdown-list" id="plat-dropdown-list-request"></div>
+              </div>
+            </div>
+            <div class="fg fgfull">
+              <label>Employee</label>
+              <div class="searchable-dropdown" id="emp-dropdown-request">
+                <input id="rqe" type="text" placeholder="Search employee by name or ID..." autocomplete="off" oninput="filterEmployeesRequest()"/>
+                <div class="searchable-dropdown-list" id="emp-dropdown-list-request"></div>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Account</label>
+              <div class="searchable-dropdown" id="acct-dropdown-request">
+                <input id="rqacct" type="text" placeholder="Search account..." autocomplete="off" oninput="filterAccountsRequest()"/>
+                <div class="searchable-dropdown-list" id="acct-dropdown-list-request"></div>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Project</label>
+              <div class="searchable-dropdown" id="proj-dropdown-request">
+                <input id="rqproj" type="text" placeholder="Search project..." autocomplete="off" oninput="filterProjectsRequest()"/>
+                <div class="searchable-dropdown-list" id="proj-dropdown-list-request"></div>
+              </div>
+            </div>
+            <div class="fg"><label>Effective date</label><input type="date" id="rqdt"/></div>
+            <div class="fg fgfull"><label>Justification</label><textarea id="rqj" rows="5" placeholder="Brief reason..."></textarea></div>
+          </div>
+          <div style="margin-top:10px;background:var(--tan);border-radius:7px;padding:9px 11px;font-size:11px;color:var(--gray);">
+            <strong>Approval Workflow:</strong><br/>
+            ~ <strong>Account Owner, GDL, IT Admin:</strong> Self-approve > Directly to action queue for execution<br/>
+            ~ <strong>Project Manager & Other roles:</strong> Requires Account Owner approval > IT Admin final approval > Action queue
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button class="btn blm" id="submit-req-btn" onclick="submitReq()">Submit Request</button>
+            <button class="btn" onclick="show('analytics')">Cancel</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctitle">My recent requests</div>
+          <table><thead><tr><th>Employee</th><th>Platform</th><th>Type</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="mrb"><tr><td colspan="5" style="color:var(--gray2);text-align:center;padding:18px;">No requests yet</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTION QUEUE -->
+    <div id="sec-queue" class="sec">
+      <div class="card" style="border:1px solid var(--lime);margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:600;">Manual license action <span style="font-size:10px;font-weight:400;color:var(--gray2);margin-left:6px;">For backup admin or direct execution</span></div>
+          <button class="btn" id="mreq-toggle" onclick="togMR()">+ Add manual request</button>
+        </div>
+        <div id="mreq-form" style="display:none;">
+          <div class="fgrid" style="gap:10px;">
+            <div class="fg"><label>Action</label><select id="mr-type"><option>Assign</option><option>Revoke</option></select></div>
+            <div class="fg">
+              <label>Platform</label>
+              <div class="searchable-dropdown" id="plat-dropdown-manual">
+                <input id="mr-plat" type="text" placeholder="Search platform..." autocomplete="off" oninput="filterPlatformsManual()"/>
+                <div class="searchable-dropdown-list" id="plat-dropdown-list-manual"></div>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Employee name</label>
+              <div class="searchable-dropdown" id="emp-dropdown">
+                <input id="mr-emp" type="text" placeholder="Search employee by name or ID..." autocomplete="off" oninput="filterEmployees()"/>
+                <div class="searchable-dropdown-list" id="emp-dropdown-list"></div>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Account</label>
+              <div class="searchable-dropdown" id="mr-acct-dropdown">
+                <input id="mr-acct" type="text" placeholder="Search account..." autocomplete="off" oninput="filterAccountsManual()"/>
+                <div class="searchable-dropdown-list" id="mr-acct-list"></div>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Project</label>
+              <div class="searchable-dropdown" id="mr-proj-dropdown">
+                <input id="mr-proj" type="text" placeholder="Search project..." autocomplete="off" oninput="filterProjectsManual()"/>
+                <div class="searchable-dropdown-list" id="mr-proj-list"></div>
+              </div>
+            </div>
+            <div class="fg"><label>GDL</label><input id="mr-gdl" readonly/></div>
+            <div class="fg"><label>Effective date</label><input type="date" id="mr-dt"/></div>
+            <div class="fg"><label>Raised by</label><input id="mr-by" readonly style="background:var(--tan);color:var(--gray);cursor:not-allowed;"/></div>
+            <div class="fg fgfull"><label>Reason</label><input id="mr-reason" placeholder="Reason for manual action..."/></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn blm" onclick="addMR()">Add to queue</button>
+            <button class="btn" onclick="togMR()">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--gray2);margin-bottom:12px;">
+        All pending approvals and approved requests. Account Owners can approve Project Manager requests. IT Admin gives final approval before execution.
+      </div>
+      <div style="margin-bottom:12px;">
+        <input type="text" id="queue-search" placeholder="Search by employee, platform, or project..." 
+          oninput="filterQueue()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;"/>
+      </div>
+      <div id="ql"></div>
+    </div>
+
+    <!-- APPROVALS (Account Owner view) -->
+    <div id="sec-approvals" class="sec">
+      <div style="font-size:12px;color:var(--gray2);margin-bottom:12px;">
+        License requests from your team awaiting your approval. After you approve, the request goes to IT Admin for final sign-off.
+      </div>
+      <div style="margin-bottom:12px;">
+        <input type="text" id="approvals-search" placeholder="Search by employee, platform, or project..."
+          oninput="filterApprovals()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;"/>
+      </div>
+      <div id="approvals-list"></div>
+      <div id="approvals-history"></div>
+    </div>
+
+    <!-- DISTRIBUTION -->
+    <div id="sec-distribution" class="sec">
+      <div class="sctabs">
+        <button class="stab on" id="dt-unit"    onclick="setDT('unit')">By employee unit</button>
+        <button class="stab"    id="dt-account" onclick="setDT('account')">By account owner</button>
+        <button class="stab"    id="dt-platform"onclick="setDT('platform')">By platform</button>
+      </div>
+      <div id="dp-unit"></div>
+      <div id="dp-account" style="display:none;"></div>
+      <div id="dp-platform" style="display:none;"></div>
+    </div>
+
+    <!-- SEARCH -->
+    <div id="sec-search" class="sec">
+      <div class="sctabs">
+        <button class="stab on" id="st-emp"  onclick="setST('emp')">Search by employee</button>
+        <button class="stab"    id="st-plat" onclick="setST('plat')">Search by platform</button>
+      </div>
+      <div id="sp-emp">
+        <div style="position:relative;margin-bottom:14px;">
+          <input id="esrch" placeholder="Type employee name or ID..." oninput="srchEmp()" style="padding-left:34px;"/>
+          <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);" width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="#9a9a94" stroke-width="1.5"/><path d="M10 10l3 3" stroke="#9a9a94" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div id="er"></div>
+      </div>
+      <div id="sp-plat" style="display:none;">
+        <div class="fbar" style="margin-bottom:14px;">
+          <select id="pss" onchange="srchPlat()" style="min-width:170px;font-size:12px;"><option value="">— select platform —</option></select>
+          <select id="psu" onchange="srchPlat()" style="min-width:110px;font-size:12px;"><option value="">All units</option></select>
+          <select id="psa" onchange="srchPlat()" style="min-width:120px;font-size:12px;"><option value="">All accounts</option></select>
+          <div style="margin-left:auto;font-size:11px;color:var(--gray2);" id="prc"></div>
+        </div>
+        <div id="pr"></div>
+      </div>
+    </div>
+
+    <!-- PLATFORM MASTER -->
+    <div id="sec-platforms" class="sec">
+      <div class="g3" id="psum"></div>
+      <div class="card" id="pform" style="display:none;border:1px solid var(--lime);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-size:13px;font-weight:600;" id="pfh">Add new platform</div>
+          <button class="btn" onclick="hidePF()">Cancel</button>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--gray2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);">Platform identity</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="fg"><label>Platform name *</label><input id="pfn" placeholder="e.g. GitHub Copilot, Gemini"/></div>
+          <div class="fg"><label>Vendor *</label><input id="pfv" placeholder="e.g. Google"/></div>
+          <div class="fg"><label>Category</label><select id="pfcat"><option>AI / ML</option><option>Dev tools</option><option>DevTools</option><option>IDE</option><option>Infrastructure</option><option>Collaboration</option><option>Security</option><option>Analytics</option><option>Other</option></select></div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--gray2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);">Agreement &amp; billing</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="fg"><label>Agreement type *</label><select id="pfagr"><option value="enterprise">Enterprise</option><option value="perpetual">Perpetual</option><option value="business">Business</option><option value="teams">Teams</option><option value="premium">Premium</option><option value="standard">Standard</option><option value="community">Community</option><option value="cloud">Cloud</option><option value="addon">Add on</option><option value="any_other">Any other</option></select></div>
+          <div class="fg"><label>License type *</label><select id="pftype" onchange="togPFtype()"><option value="per_user">Per user</option><option value="enterprise">Enterprise</option><option value="usage_based">Usage based</option><option value="perpetual">Perpetual</option><option value="pay_as_you_go">Pay as you go</option></select></div>
+          <div class="fg"><label>Billing period</label><select id="pfbill"><option value="annual">Annual</option><option value="monthly">Monthly</option><option value="pay_as_you_go">Pay as you go</option></select></div>
+          <div class="fg"><label>Currency</label><select id="pfcur"><option value="USD">USD ($) — default</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="INR">INR (₹)</option></select></div>
+          <div class="fg"><label>Contract effective date</label><input type="date" id="pfeff"/></div>
+          <div class="fg"><label>Renewal date</label><input type="date" id="pfren"/></div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--gray2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);">Cost model</div>
+        <div id="pfpu" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;background:var(--bluebg);border-radius:8px;padding:12px;">
+          <div style="grid-column:1/-1;font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Per-user</div>
+          <div class="fg"><label>Cost per seat *</label><input type="number" id="pfsc" oninput="pfPrev()" placeholder="e.g. 21"/></div>
+          <div class="fg"><label>Purchased seats</label><input type="number" id="pfmax" placeholder="Total purchased"/></div>
+          <div class="fg"><label>Inactivity flag (days)</label><input type="number" id="pfid" value="30"/></div>
+        </div>
+        <div id="pfub" style="display:none;background:#fff8e6;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #f0e0b8;">
+          <div style="font-size:10px;font-weight:700;color:#9a6b00;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Usage based — fixed monthly fee</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+            <div class="fg"><label>Fixed monthly cost *</label><input type="number" id="pfubec" oninput="pfPrev()" placeholder="e.g. 600" min="0" step="0.01"/></div>
+            <div class="fg"><label>Max seats *</label><input type="number" id="pfubmax" oninput="pfPrev()" value="20" min="1" max="20" placeholder="20"/></div>
+            <div class="fg"><label>Inactivity flag (days)</label><input type="number" id="pfubid" value="30"/></div>
+          </div>
+          <div style="background:var(--white);border-radius:6px;padding:9px;font-size:11px;color:var(--gray);">One flat fee per month (e.g. $600) whether 1 or many users are assigned, up to the max seat limit.</div>
+        </div>
+        <div id="pfent" style="display:none;background:var(--greenbg);border-radius:8px;padding:12px;margin-bottom:12px;">
+          <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Enterprise flat fee</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+            <div class="fg"><label>Total contract cost *</label><input type="number" id="pfec" oninput="pfPrev()" placeholder="e.g. 48000"/></div>
+            <div class="fg"><label>Purchased seats *</label><input type="number" id="pfes" oninput="pfPrev()" placeholder="e.g. 100"/></div>
+            <div class="fg"><label>Allocation method</label><select id="pfal" onchange="pfPrev()"><option value="equal">Equal split</option><option value="usage">Usage-weighted</option></select></div>
+            <div class="fg"><label>Inactivity flag (days)</label><input type="number" id="pfid2" value="30"/></div>
+          </div>
+          <div style="background:var(--white);border-radius:6px;padding:9px;font-size:11px;color:var(--gray);"><strong>Equal split:</strong> cost ÷ purchased seats. &nbsp;<strong>Usage-weighted:</strong> cost ÷ active users — incentivises revocation.</div>
+        </div>
+        <div style="background:var(--tan);border-radius:7px;padding:10px 12px;margin-bottom:12px;">
+          <div style="font-size:10px;color:var(--gray2);margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Live cost preview</div>
+          <div style="font-size:16px;font-weight:700;" id="pfprev">Fill in cost fields above</div>
+          <div style="font-size:11px;color:var(--gray2);margin-top:2px;" id="pfprevs"></div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--gray2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);">Admin config</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="fg"><label>Contractor access</label><select id="pfcon"><option value="yes">Allowed</option><option value="no">Not allowed</option></select></div>
+          <div class="fg"><label>Shared / concurrent</label><select id="pfsh"><option value="no">No — one seat per user</option><option value="yes">Yes — shared</option></select></div>
+          <div class="fg"><label>API (Phase 2)</label><select id="pfapi"><option value="no">Not yet</option><option value="yes">Available</option></select></div>
+          <div class="fg fgfull"><label>Notes</label><input id="pfnotes" placeholder="Admin notes..."/></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn blm" onclick="savePF()">Save platform</button>
+          <button class="btn" onclick="hidePF()">Cancel</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow-x:auto;margin-bottom:14px;"><table><thead><tr><th>Platform</th><th>Vendor</th><th>Agreement</th><th>Type</th><th>Currency</th><th>Seats</th><th>Available</th><th>Unit cost/Mth</th><th>Effective</th><th>Renewal</th><th></th></tr></thead><tbody id="ptb"></tbody></table></div><div class="card" id="seat-hist-panel" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div class="ctitle" style="margin-bottom:0;">Seat count snapshots — <span id="seat-hist-name"></span></div><button class="btn" onclick="document.getElementById('seat-hist-panel').style.display='none'">Close</button></div><div id="seat-hist-content"></div></div><div class="g2"><div class="card"><div class="ctitle">Per-user calculator</div><div class="fg" style="margin-bottom:8px;"><label>Platform</label><select id="pusel" onchange="calcPU()"><option value="">Select</option></select></div><div class="fg" style="margin-bottom:8px;"><label>Active seats</label><input type="number" id="pus" value="10" oninput="calcPU()"/></div><div style="background:var(--tan);border-radius:7px;padding:10px;"><div style="font-size:10px;color:var(--gray2);margin-bottom:2px;">MONTHLY SPEND</div><div style="font-size:18px;font-weight:700;" id="puout">—</div><div style="font-size:11px;color:var(--gray2);margin-top:2px;" id="puann">Select a platform</div></div></div><div class="card"><div class="ctitle">Enterprise calculator</div><div class="fg" style="margin-bottom:8px;"><label>Platform</label><select id="entsel" onchange="calcEnt()"><option value="">Select</option></select></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;"><div class="fg"><label>Active users</label><input type="number" id="enta" value="60" oninput="calcEnt()"/></div><div class="fg"><label>Method</label><select id="entm" onchange="calcEnt()"><option value="equal">Equal split</option><option value="usage">Usage-weighted</option></select></div></div><div style="background:var(--tan);border-radius:7px;padding:10px;"><div style="font-size:10px;color:var(--gray2);margin-bottom:2px;">COST / USER / MONTH</div><div style="font-size:18px;font-weight:700;" id="entout">—</div><div style="font-size:11px;color:var(--gray2);margin-top:2px;" id="entinfo"></div></div></div></div></div>
+
+    <!-- COST ANALYSIS -->
+    <div id="sec-cost" class="sec">
+      <div id="css"></div>
+      <div class="fbar" style="margin-bottom:14px;">
+        <span class="fbar-label">View</span>
+        <select id="cost-period" onchange="renderCost()" style="width:auto;font-size:12px;"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annual">Annual</option></select>
+        <select id="cost-year" onchange="renderCost()" style="width:auto;font-size:12px;"><option value="2024">2024</option><option value="2023">2023</option></select>
+        <select id="cost-view" onchange="renderCost()" style="width:auto;font-size:12px;"><option value="all">All platforms</option></select>
+      </div>
+      <div class="g4" id="cost-metrics"></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="ctitle" style="margin-bottom:0;" id="cost-trend-title">Spend trend</div>
+          <div style="font-size:11px;color:var(--gray2);" id="cost-trend-diff"></div>
+        </div>
+        <div id="cost-trend-chart"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle" id="cost-project-title">Monthly cost per project</div>
+        <div style="overflow-x:auto;">
+          <table id="monthly-proj-table"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ctitle">Cost by project</div><div id="cproj"></div></div>
+        <div class="card"><div class="ctitle">Cost by platform</div><div id="cplat"></div></div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div id="sec-reports" class="sec">
+      <div class="g2">
+        <div class="card"><div class="ctitle">Available reports</div><div id="rlist"></div></div>
+        <div class="card">
+          <div class="ctitle">KPI summary — Q1 2024</div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--tan);"><div><div style="font-size:13px;font-weight:500;">License utilisation rate</div></div><div style="font-size:18px;font-weight:700;color:var(--green);">76%</div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--tan);"><div><div style="font-size:13px;font-weight:500;">Avg. revocation turnaround</div></div><div style="font-size:18px;font-weight:700;color:var(--amber);">4.2 days</div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--tan);"><div><div style="font-size:13px;font-weight:500;">Cost saved Q1</div></div><div style="font-size:18px;font-weight:700;color:var(--green);">$1,450</div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--tan);"><div><div style="font-size:13px;font-weight:500;">Open alerts</div></div><div style="font-size:18px;font-weight:700;color:var(--red);">6</div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;"><div><div style="font-size:13px;font-weight:500;">Aspire events (Q1)</div></div><div style="font-size:18px;font-weight:700;">23</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div class="toast" id="toast"></div>
+  <!-- FLOATING TOOLTIP -->
+  <div id="iq-tooltip"></div>
+
+  <!-- PDF EXPORT LIBRARIES -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- LICENSEIQ_RUNTIME_CONFIG -->
+  <script src="/static/js/security.js?v=20260521"></script>
+  <script src="/static/js/app.js?v=20260521a"></script>
+</body>
+</html>

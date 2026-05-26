@@ -1,0 +1,64 @@
+-- =============================================================================
+-- FILE    : 00_README.sql
+-- LicenseIQ — SP Implementation Scripts
+-- =============================================================================
+--
+-- This folder contains the SQL scripts required to set up all stored procedures
+-- used by the LicenseIQ application. Share these with your DBA / DB team.
+--
+-- EXECUTION ORDER
+-- ─────────────────────────────────────────────────────────────────────────────
+--  #   File                                       Target Database
+--  1.  01_aspire_event_procedures.sql             Aspire source DB  (read-only)
+--  2.  02_licenseiq_dashboard_procedure.sql       LicenseIQ app DB  (read-write)
+--
+-- STORED PROCEDURES SUMMARY
+-- ─────────────────────────────────────────────────────────────────────────────
+--
+--  Target: ASPIRE database
+--  ┌───────────────────────────────────────────┬────────────┬─────────────────────────────────────────────────────────┐
+--  │ Procedure Name                            │ Parameters │ Purpose                                                 │
+--  ├───────────────────────────────────────────┼────────────┼─────────────────────────────────────────────────────────┤
+--  │ dbo.usp_GetAspireExitEvents               │ @since,    │ Employees with resignation records within look-back     │
+--  │                                           │ @future    │ window. Drives EXIT smart-alerts in LicenseIQ.          │
+--  ├───────────────────────────────────────────┼────────────┼─────────────────────────────────────────────────────────┤
+--  │ dbo.usp_GetAspireProjectReleaseEvents     │ @since,    │ Employees released from a project within look-back.     │
+--  │                                           │ @today     │ Drives PROJECT_CHANGE smart-alerts.                     │
+--  ├───────────────────────────────────────────┼────────────┼─────────────────────────────────────────────────────────┤
+--  │ dbo.usp_GetAspireReleaseReasons           │ (none)     │ Lookup table of project-release reason codes + labels.  │
+--  ├───────────────────────────────────────────┼────────────┼─────────────────────────────────────────────────────────┤
+--  │ dbo.usp_GetAspireBenchEvents              │ @since,    │ Employees placed on bench / Corporate Pool within       │
+--  │                                           │ @today     │ look-back window. Drives BENCH smart-alerts.            │
+--  └───────────────────────────────────────────┴────────────┴─────────────────────────────────────────────────────────┘
+--
+--  Target: LICENSEIQ application database
+--  ┌───────────────────────────────────────────┬──────────────────┬──────────────────────────────────────────────────┐
+--  │ Procedure Name                            │ Parameters       │ Purpose                                          │
+--  ├───────────────────────────────────────────┼──────────────────┼──────────────────────────────────────────────────┤
+--  │ dbo.usp_GetDashboardSummaryMetrics        │ @employee_ids    │ Aggregates total / active / flagged license       │
+--  │                                           │ (CSV int list)   │ counts + monthly spend + open alert count for    │
+--  │                                           │                  │ the supplied employee scope.                     │
+--  └───────────────────────────────────────────┴──────────────────┴──────────────────────────────────────────────────┘
+--
+-- NOTES
+-- ─────────────────────────────────────────────────────────────────────────────
+--  • All scripts use CREATE OR ALTER — safe to run multiple times.
+--  • The Aspire procedures are READ-ONLY (SELECT only). No data is modified.
+--  • The LicenseIQ app DB user only needs EXECUTE permission on each procedure.
+--  • Replace placeholder names before running:
+--      <AspireDatabase>    → actual Aspire DB name (e.g. AspireDB)
+--      <LicenseIQDatabase> → actual LicenseIQ DB name (e.g. LicenseIQ)
+--
+-- GRANT EXECUTE (run as DBA after creating the procedures)
+-- ─────────────────────────────────────────────────────────────────────────────
+--
+--  -- On Aspire DB:
+--  GRANT EXECUTE ON dbo.usp_GetAspireExitEvents           TO [<app_login>];
+--  GRANT EXECUTE ON dbo.usp_GetAspireProjectReleaseEvents TO [<app_login>];
+--  GRANT EXECUTE ON dbo.usp_GetAspireReleaseReasons       TO [<app_login>];
+--  GRANT EXECUTE ON dbo.usp_GetAspireBenchEvents          TO [<app_login>];
+--
+--  -- On LicenseIQ DB:
+--  GRANT EXECUTE ON dbo.usp_GetDashboardSummaryMetrics    TO [<app_login>];
+--
+-- =============================================================================

@@ -1,0 +1,142 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.key
+*.pem
+*.p12
+
+# Packaging and build outputs
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Test, lint, and type-check caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.hypothesis/
+.tox/
+.nox/
+
+# Coverage artifacts
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# Logs and temp files
+*.log
+*.log.*
+*.out
+logs/
+.tmp/
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# IDE/editor and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Frontend/package manager artifacts
+node_modules/
+.npm/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Project-specific generated artifacts
+scripts/
+reports/
+config/
+docs/*.docx
+docs/PROJECT_WORK_LOG.md
+docs/SESSION_SUMMARY*.md
+docs/DEPLOYMENT_LOG*.md
+docs/FILE_MANIFEST.md
+docs/PHASE1_*.md
+docs/PROJECT_INDEX.md
+docs/licenseIQchanges.txt
+PHASE1_ROUTE_INTEGRATION_COMPLETE.md
+SESSION_SUMMARY_ROUTE_INTEGRATION.md
+
+# Debug / manual test runners (not part of pytest suite)
+tests/manual/
+tests/scripts/
+
+# Test data and fixtures
+tests/test_data/
+tests/fixtures/
+
+# Unused static assets
+app/frontend/static/img/unused/
+
+# Session logs and debug logs
+VSCODE_TARGET_SESSION_LOG/
+debug_logs/
+**/.debug/
+
+# CSV/Excel files with test or real data
+*.csv
+*.xlsx
+*.xls
+
+# Bootstrap and configuration files with secrets
+bootstrap.json
+.env.local
+.env.production
+
+# Database backup and dump files
+*.sql.backup
+*.sql.bak
+*.dump
+sql_dumps/
+
+# Temporary Python files
+*.pickle
+*.pkl
+*.pyc
+
+# pytest output
+.pytest_cache/
+test_results/
+test_outputs/
+
+# FastAPI generated files
+.fastapi/
+
+# Windows batch and PowerShell scripts (if containing sensitive data)
+scripts/*.ps1
+scripts/*.bat
